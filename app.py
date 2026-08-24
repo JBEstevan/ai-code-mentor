@@ -2,7 +2,7 @@ import os
 import streamlit as st
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_google_genai import ChatGoogleGenerativeAI
 try:
@@ -27,7 +27,7 @@ def carregar_agente(api_key: str):
     if not os.path.exists(caminho_pdf):
         return None, "pdf_ausente"
 
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001")
 
     # Reutiliza o banco vetorial se já estiver salvo em disco
     if os.path.exists(caminho_chroma) and os.listdir(caminho_chroma):
