@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ChromaDB local vector store (gerado automaticamente a partir do PDF)
+chroma_db/
+
+# Variáveis de ambiente e segredos
+.env
+*.env
+
+# Ambientes virtuais
+.venv/
+venv/
+ENV/
+env/
+
+# IDE e sistema
+.vscode/
+.idea/
+.DS_Store
