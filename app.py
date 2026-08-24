@@ -2,15 +2,17 @@ import os
 import streamlit as st
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_community.vectorstores import Chroma
-from langchain_google_genai import ChatGoogleGenerativeAI
+
+# Tratamento de compatibilidade do LangChain
 try:
     from langchain.chains import create_retrieval_chain
     from langchain.chains.combine_documents import create_stuff_documents_chain
 except ModuleNotFoundError:
     from langchain_classic.chains import create_retrieval_chain
     from langchain_classic.chains.combine_documents import create_stuff_documents_chain
+
 from langchain_core.prompts import ChatPromptTemplate
 
 st.set_page_config(page_title="Mentor de Backend - Clean Code", page_icon="🤖", layout="centered")
@@ -18,6 +20,7 @@ st.title("Mentor de Backend & Code Reviewer 🤖")
 st.write("Faça perguntas sobre boas práticas, arquitetura e Clean Code baseadas no manual oficial.")
 
 
+# Função em Cache para carregar o RAG via API
 @st.cache_resource(show_spinner=False)
 def carregar_agente(api_key: str):
     os.environ["GOOGLE_API_KEY"] = api_key
@@ -29,7 +32,6 @@ def carregar_agente(api_key: str):
 
     embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001")
 
-    # Reutiliza o banco vetorial se já estiver salvo em disco
     if os.path.exists(caminho_chroma) and os.listdir(caminho_chroma):
         banco_vetorial = Chroma(
             persist_directory=caminho_chroma,
@@ -67,7 +69,6 @@ def carregar_agente(api_key: str):
     agente = create_retrieval_chain(retriever, question_answer_chain)
     return agente, None
 
-
 # Barra lateral para opções e inserção da Chave de API
 with st.sidebar:
     st.header("⚙️ Opções")
@@ -83,32 +84,28 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-# Validação da Chave de API
+    st.markdown("---")
+    st.markdown("**Projeto:** Oracle Tech AI Builder\n**Stack:** LangChain, ChromaDB, Gemini 3.6 Flash.")
+
 if not api_key_input:
     st.error("🔑 Variável de ambiente GOOGLE_API_KEY não configurada. Por favor, insira sua chave na barra lateral (Sidebar) ao lado.")
 else:
     agente, erro = carregar_agente(api_key_input)
 
     if erro == "pdf_ausente":
-        st.error("Documento 'Boas_Praticas_de_Codigo_e_Clean_Code.pdf' não encontrado na pasta raiz.")
+        st.error("⚠️ Documento 'Boas_Praticas_de_Codigo_e_Clean_Code.pdf' não encontrado na pasta raiz.")
     elif agente is not None:
-        # Inicializa o histórico de mensagens no session_state
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
-        # Mostrar o histórico de conversa
         for msg in st.session_state.messages:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
-
-        # Campo de input no formato de chat
         if pergunta_usuario := st.chat_input("Qual a sua dúvida de código hoje, Dev?"):
-            # Adiciona e exibe mensagem do usuário
             st.session_state.messages.append({"role": "user", "content": pergunta_usuario})
             with st.chat_message("user"):
                 st.markdown(pergunta_usuario)
 
-            # Gera e exibe a resposta do mentor
             with st.chat_message("assistant"):
                 with st.spinner("Analisando o manual e consultando o Mentor..."):
                     try:
