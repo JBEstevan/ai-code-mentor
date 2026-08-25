@@ -69,15 +69,20 @@ def carregar_agente(api_key: str):
     agente = create_retrieval_chain(retriever, question_answer_chain)
     return agente, None
 
-# Barra lateral para opções e inserção da Chave de API
+env_key = os.environ.get("GOOGLE_API_KEY", "")
+
 with st.sidebar:
     st.header("⚙️ Opções")
-    env_key = os.environ.get("GOOGLE_API_KEY", "")
-    api_key_input = st.text_input(
-        "Chave API Google Gemini",
-        value=env_key,
-        type="password",
-        help="Insira a sua chave GOOGLE_API_KEY caso não esteja definida nas variáveis de ambiente."
+
+    if env_key:
+        api_key_input = env_key
+        st.success("Chave de API configurada pelo servidor.")
+    else:
+        api_key_input = st.text_input(
+            "Chave API Google Gemini",
+            value="",
+            type="password",
+            help="O servidor não tem uma chave configurada. Insira a sua própria chave do Google Gemini."
     )
 
     if st.button("🗑️ Limpar Histórico de Chat"):
